@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Network Packet Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --surface2: #f7fafc;
+  --border: #d1dce8;
+  --border2: #b0c4d8;
+  --text: #1a2535;
+  --text2: #4a5e75;
+  --text3: #7a90a8;
+  --accent: #2563eb;
+  --accent2: #1d4ed8;
+  --green: #16a34a;
+  --orange: #d97706;
+  --red: #dc2626;
+  --purple: #7c3aed;
+  --teal: #0891b2;
+  --node-default: #ffffff;
+  --node-stroke: #94a3b8;
+  --node-hl: #2563eb;
+  --node-hl-fill: #dbeafe;
+  --node-current: #16a34a;
+  --node-current-fill: #dcfce7;
+  --edge-default: #cbd5e1;
+  --edge-hl: #2563eb;
+  --edge-packet: #f59e0b;
+  --packet-color: #f59e0b;
+  --shadow: 0 2px 16px rgba(37,99,235,0.08);
+  --shadow2: 0 4px 24px rgba(37,99,235,0.13);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+header {
+  background: var(--surface);
+  border-bottom: 1.5px solid var(--border);
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow);
+}
+.header-icon {
+  width: 36px; height: 36px;
+  background: var(--accent);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+}
+header h1 { font-size: 1.15rem; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+header p { font-size: 0.78rem; color: var(--text3); margin-top: 1px; font-family: 'JetBrains Mono', monospace; }
+.header-badges { margin-left: auto; display: flex; gap: 6px; }
+.hbadge {
+  padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600;
+  font-family: 'JetBrains Mono', monospace; letter-spacing: 0.03em;
+}
+.hbadge.blue { background: #dbeafe; color: var(--accent); }
+.hbadge.green { background: #dcfce7; color: var(--green); }
+.hbadge.purple { background: #ede9fe; color: var(--purple); }
+
+.layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 14px;
+  padding: 14px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.left-col { display: flex; flex-direction: column; gap: 12px; }
+.right-col { display: flex; flex-direction: column; gap: 12px; }
+
+.card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+.card h2 {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.card h2 .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+}
+
+label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text2);
+  display: block;
+  margin-bottom: 4px;
+  margin-top: 10px;
+}
+label:first-of-type { margin-top: 0; }
+
+input, select, textarea {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-family: 'JetBrains Mono', monospace;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+textarea { resize: vertical; min-height: 65px; }
+
+.btn {
+  margin-top: 10px; width: 100%; padding: 9px 14px;
+  border: none; border-radius: 8px;
+  background: var(--accent); color: #fff;
+  font-size: 0.82rem; font-weight: 700;
+  cursor: pointer; transition: background 0.15s, transform 0.1s;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: 0.01em;
+}
+.btn:hover { background: var(--accent2); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn.secondary {
+  background: var(--surface2);
+  color: var(--text2);
+  border: 1.5px solid var(--border);
+}
+.btn.secondary:hover { background: var(--border); color: var(--text); }
+.btn.green-btn { background: var(--green); }
+.btn.green-btn:hover { background: #15803d; }
+.btn.orange-btn { background: var(--orange); }
+.btn.orange-btn:hover { background: #b45309; }
+
+.row-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.row-btns .btn { margin-top: 8px; }
+
+canvas {
+  width: 100%;
+  display: block;
+  border-radius: 10px;
+  background: var(--surface2);
+  cursor: grab;
+  user-select: none;
+}
+canvas.dragging { cursor: grabbing; }
+
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.stat-box {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 10px;
+  text-align: center;
+}
+.stat-box .val { font-size: 1.4rem; font-weight: 700; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+.stat-box .lbl { font-size: 0.68rem; color: var(--text3); margin-top: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.log-box {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text2);
+  max-height: 130px;
+  overflow-y: auto;
+  line-height: 1.7;
+}
+.log-box .log-line { border-bottom: 1px solid var(--border); padding: 2px 0; }
+.log-box .log-line:last-child { border-bottom: none; }
+.log-line .ts { color: var(--text3); margin-right: 6px; }
+.log-line .msg { color: var(--text); }
+.log-line.info .msg { color: var(--accent); }
+.log-line.success .msg { color: var(--green); }
+.log-line.warn .msg { color: var(--orange); }
+
+.path-display {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent);
+  word-break: break-all;
+  background: var(--surface2);
+  border-radius: 7px;
+  padding: 8px 10px;
+  border: 1.5px solid #dbeafe;
+  min-height: 36px;
+}
+
+.stack-display { display: flex; flex-direction: column-reverse; gap: 4px; margin-top: 8px; }
+.stack-item {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+}
+.stack-item.top { border-color: var(--green); color: var(--green); background: #f0fdf4; }
+
+.legend {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  margin-bottom: 8px;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 0.72rem; color: var(--text2);
+}
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid transparent; }
+.legend-line { width: 20px; height: 2px; }
+
+.node-count-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+}
+.node-count-row label { margin: 0; flex: 1; }
+.node-count-input { width: 64px !important; text-align: center; }
+.btn-sm {
+  padding: 6px 12px; border: none; border-radius: 7px;
+  background: var(--accent); color: #fff;
+  font-size: 0.8rem; font-weight: 700; cursor: pointer;
+  margin-top: 0 !important; width: auto !important;
+  font-family: 'Outfit', sans-serif;
+}
+.btn-sm:hover { background: var(--accent2); }
+
+.packet-legend {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.72rem; color: var(--text2); margin-top: 6px;
+}
+.pkt-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--packet-color); }
+
+/* Animated packet */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.pulsing { animation: pulse 1s infinite; }
+
+.ip-pill {
+  display: inline-block;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 0.68rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent);
+}
+
+/* ── Encryption Card ── */
+.enc-algo-btn {
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all 0.15s;
+}
+.enc-algo-btn:hover { border-color: var(--purple); color: var(--purple); }
+.enc-algo-btn.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+
+.enc-stage {
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.enc-stage-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 5px;
+}
+.enc-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  color: var(--text);
+  word-break: break-all;
+  line-height: 1.5;
+}
+.enc-arrow {
+  text-align: center;
+  color: var(--text3);
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin: 4px 0;
+  letter-spacing: 0.05em;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">🌐</div>
+  <div>
+    <h1>Network Packet Simulator</h1>
+    <p>Dijkstra · Packet Animation · IP Addressing · Dynamic Topology</p>
+  </div>
+  <div class="header-badges">
+    <span class="hbadge blue">Dijkstra</span>
+    <span class="hbadge green">Live Packets</span>
+    <span class="hbadge purple">BFS</span>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- LEFT -->
+  <div class="left-col">
+
+    <!-- Dynamic Graph Builder -->
+    <div class="card">
+      <h2><span class="dot"></span> Network Builder</h2>
+
+      <div class="node-count-row">
+        <label style="margin:0;">Number of Nodes</label>
+        <input class="node-count-input" type="number" id="nodeCount" value="6" min="2" max="200"/>
+        <button class="btn-sm" onclick="autoGenerate()">Auto-Gen</button>
+      </div>
+
+      <label>Node Names (comma-separated)</label>
+      <input id="nodeInput" value="R1,R2,R3,R4,R5,R6"/>
+
+      <label>Edges (Node1-Node2:weight)</label>
+      <textarea id="edgeInput">R1-R2:4,R1-R3:2,R2-R4:5,R3-R4:1,R3-R5:8,R4-R6:3,R5-R6:2,R2-R5:6</textarea>
+
+      <button class="btn" onclick="buildGraph()">⚙ Build Graph</button>
+    </div>
+
+    <!-- Routing -->
+    <div class="card">
+      <h2><span class="dot"></span> Routing Control</h2>
+      <label>Source</label>
+      <select id="srcSelect"></select>
+      <label>Destination</label>
+      <select id="dstSelect"></select>
+      <div class="row-btns">
+        <button class="btn green-btn" onclick="runDijkstra()">▶ Dijkstra</button>
+        <button class="btn secondary" onclick="runBFS()">⇄ BFS Paths</button>
+      </div>
+      <button class="btn orange-btn" onclick="animatePacket()">📦 Send Packet</button>
+      <div class="path-display" id="pathDisplay">Run Dijkstra to find path...</div>
+    </div>
+
+    <!-- Location Stack -->
+    <div class="card">
+      <h2><span class="dot"></span> Device Location Stack</h2>
+      <label>Connect device to node</label>
+      <div style="display:flex;gap:6px;margin-top:4px;">
+        <select id="locationSelect" style="flex:1;"></select>
+        <button class="btn-sm" onclick="pushLocation()">Connect</button>
+      </div>
+      <button class="btn secondary" style="margin-top:8px;" onclick="popLocation()">Disconnect (Pop)</button>
+      <div class="stack-display" id="stackDisplay"></div>
+    </div>
+
+    <!-- Unified Message Card -->
+    <div class="card" id="encryptionCard">
+      <h2><span class="dot" style="background:var(--purple)"></span> Data Payload</h2>
+
+      <label>Message</label>
+      <textarea id="huffInput" rows="2" placeholder="Type a message..." oninput="document.getElementById('encryptInput').value=this.value">hello network simulation world</textarea>
+      <!-- hidden mirror for encryption JS -->
+      <textarea id="encryptInput" style="display:none;">hello network simulation world</textarea>
+
+      <!-- Encryption section -->
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+        <div style="font-size:0.7rem;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">🔐 Encryption</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+          <button class="enc-algo-btn active" data-algo="caesar" onclick="selectAlgo(this)">Caesar</button>
+          <button class="enc-algo-btn" data-algo="vigenere" onclick="selectAlgo(this)">Vigenère</button>
+        </div>
+        <div id="encKeyRow">
+          <label id="encKeyLabel">Shift Key (1–25)</label>
+          <input id="encKey" type="text" value="3" style="margin-top:4px;width:100%;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:0.85rem;"/>
+        </div>
+      </div>
+
+      <!-- Huffman section -->
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+        <div style="font-size:0.7rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">📦 Compression</div>
+      </div>
+
+      <!-- Separate action buttons -->
+      <div style="display:flex;gap:8px;margin-top:6px;">
+        <button class="btn" style="flex:1;background:var(--purple);border-color:var(--purple);" onclick="runEncryption(false)">🔐 Encrypt</button>
+        <button class="btn" style="flex:1;background:var(--teal);border-color:var(--teal);" onclick="runAll()">📦 Compress & Transmit</button>
+      </div>
+
+      <!-- Encryption results -->
+      <div id="encResults" style="display:none;margin-top:12px;">
+        <div class="enc-stage" style="border-color:#c7d2fe;background:#f5f3ff;">
+          <div class="enc-stage-label" style="color:var(--purple);">📝 Original Message</div>
+          <div class="enc-value" id="encOriginal"></div>
+        </div>
+        <div class="enc-arrow">↓ encrypt</div>
+        <div class="enc-stage" style="border-color:#fca5a5;background:#fff1f2;">
+          <div class="enc-stage-label" style="color:#dc2626;">🔒 Encrypted</div>
+          <div class="enc-value" id="encEncrypted" style="color:#dc2626;word-break:break-all;"></div>
+          <div id="encBinary" style="margin-top:4px;font-size:0.65rem;color:#94a3b8;font-family:'JetBrains Mono',monospace;word-break:break-all;line-height:1.4;"></div>
+        </div>
+        <div class="enc-arrow">↓ compress (Huffman) + transmit</div>
+        <div id="huffStats" style="display:block;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="ip-pill" id="hOrigSize"></span>
+            <span class="ip-pill" id="hCompSize" style="background:#f0fdf4;border-color:#bbf7d0;color:var(--green)"></span>
+            <span class="ip-pill" id="hRatio"></span>
+          </div>
+          <div class="log-box" id="huffLog" style="margin-top:8px;"></div>
+        </div>
+        <div class="enc-arrow">↓ decrypt</div>
+        <div class="enc-stage" style="border-color:#bbf7d0;background:#f0fdf4;">
+          <div class="enc-stage-label" style="color:var(--green);">🔓 Decrypted</div>
+          <div class="enc-value" id="encDecrypted" style="color:var(--green);"></div>
+          <div id="encMatch" style="margin-top:4px;font-size:0.72rem;font-weight:600;"></div>
+        </div>
+        <div style="margin-top:10px;padding:8px 10px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);font-size:0.72rem;color:var(--text2);font-family:'JetBrains Mono',monospace;line-height:1.6;" id="encInfo"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right-col">
+
+    <!-- Canvas -->
+    <div class="card" style="padding:14px;">
+      <h2><span class="dot"></span> Network Topology</h2>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#dbeafe;border-color:var(--accent);"></div> Highlighted Path
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#dcfce7;border-color:var(--green);"></div> Active Device
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#ffffff;border-color:#94a3b8;"></div> Router Node
+        </div>
+        <div class="legend-item">
+          <div class="legend-line" style="background:var(--edge-hl);"></div> Active Link
+        </div>
+        <div class="packet-legend">
+          <div class="pkt-dot"></div> Packet in Transit
+        </div>
+        <div class="legend-item" style="margin-left:auto;font-size:0.7rem;color:var(--text3);">
+          🖱 Drag · Click node→node to connect · Click edge to edit
+        </div>
+      </div>
+      <div style="position:relative;display:block;">
+        <canvas id="netCanvas" height="420"></canvas>
+        <!-- Inline edge-weight popup -->
+        <div id="edgeWeightPopup" style="
+          display:none;
+          position:absolute;
+          background:#fff;
+          border:2px solid #f97316;
+          border-radius:12px;
+          box-shadow:0 8px 32px rgba(0,0,0,0.18);
+          padding:14px 18px;
+          z-index:100;
+          min-width:200px;
+          transform:translate(-50%,-50%);
+          font-family:'Outfit',sans-serif;
+        ">
+          <div id="edgeWeightPopupTitle" style="font-size:0.82rem;font-weight:600;color:#c2410c;margin-bottom:10px;text-align:center;"></div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input id="edgeWeightInput" type="number" min="1" max="99" value="1"
+              style="width:70px;padding:6px 8px;border:1.5px solid #f97316;border-radius:7px;font-size:1rem;font-family:'JetBrains Mono',monospace;text-align:center;outline:none;"
+            />
+            <button id="edgeWeightConfirm" style="
+              flex:1;padding:6px 10px;background:#f97316;color:#fff;border:none;
+              border-radius:7px;font-size:0.85rem;font-weight:600;cursor:pointer;
+            ">Connect</button>
+            <button id="edgeWeightCancel" style="
+              padding:6px 10px;background:#f1f5f9;color:#64748b;border:none;
+              border-radius:7px;font-size:0.85rem;cursor:pointer;
+            ">✕</button>
+          </div>
+          <button id="edgeWeightRemove" style="
+            display:none;margin-top:8px;width:100%;padding:6px 10px;
+            background:#fee2e2;color:#dc2626;border:1.5px solid #fca5a5;
+            border-radius:7px;font-size:0.82rem;font-weight:600;cursor:pointer;
+          ">🗑 Remove Edge</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="card">
+      <h2><span class="dot"></span> Transmission Stats</h2>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="val" id="statHops">—</div><div class="lbl">Hops</div></div>
+        <div class="stat-box"><div class="val" id="statDist">—</div><div class="lbl">Path Cost</div></div>
+        <div class="stat-box"><div class="val" id="statRatio">—</div><div class="lbl">Compress Ratio</div></div>
+        <div class="stat-box"><div class="val" id="statEff">—</div><div class="lbl">Savings</div></div>
+      </div>
+    </div>
+
+    <!-- IP Table -->
+    <div class="card">
+      <h2><span class="dot"></span> Node IP Address Table</h2>
+      <div id="ipTable" style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.8rem;font-family:'JetBrains Mono',monospace;">
+          <thead>
+            <tr style="background:var(--surface2);">
+              <th style="padding:7px 10px;text-align:left;color:var(--text3);font-size:0.7rem;text-transform:uppercase;border-bottom:1.5px solid var(--border);">Node</th>
+              <th style="padding:7px 10px;text-align:left;color:var(--text3);font-size:0.7rem;text-transform:uppercase;border-bottom:1.5px solid var(--border);">IP Address</th>
+              <th style="padding:7px 10px;text-align:left;color:var(--text3);font-size:0.7rem;text-transform:uppercase;border-bottom:1.5px solid var(--border);">Subnet</th>
+              <th style="padding:7px 10px;text-align:left;color:var(--text3);font-size:0.7rem;text-transform:uppercase;border-bottom:1.5px solid var(--border);">Status</th>
+            </tr>
+          </thead>
+          <tbody id="ipTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Log -->
+    <div class="card">
+      <h2><span class="dot"></span> System Log</h2>
+      <div class="log-box" id="sysLog"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─── State ──────────────────────────────────────────────────────────────────
+let graph = {};
+let nodes = [];
+let nodeIPs = {};
+let locationStack = [];
+let shortestPath = [];
+let canvasPositions = {};
+
+// Packet animation state
+let packetAnim = null;
+let packetProgress = 0;
+let packetPathSegment = 0;
+let animFrameId = null;
+
+// Drag state
+let dragNode = null;
+let dragOffsetX = 0, dragOffsetY = 0;
+
+// ─── Canvas helpers ──────────────────────────────────────────────────────────
+function getCanvasXY(canvas, e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+}
+
+function hitNode(x, y) {
+  const R = 28;
+  for(const n of nodes) {
+    const p = canvasPositions[n];
+    if(!p) continue;
+    const dx = x - p.x, dy = y - p.y;
+    if(Math.sqrt(dx*dx + dy*dy) <= R) return n;
+  }
+  return null;
+}
+
+function hitEdge(x, y) {
+  // Returns {a, b, w} if click is near an edge midpoint/line
+  const THRESH = 10;
+  const drawn = new Set();
+  for(const n of nodes) {
+    for(const {node:m, w} of (graph[n]||[])) {
+      const key = [n,m].sort().join('-');
+      if(drawn.has(key)) continue; drawn.add(key);
+      const p1 = canvasPositions[n], p2 = canvasPositions[m];
+      if(!p1||!p2) continue;
+      // Distance from point to segment
+      const dx = p2.x-p1.x, dy = p2.y-p1.y;
+      const len2 = dx*dx+dy*dy;
+      if(len2===0) continue;
+      const t = Math.max(0,Math.min(1,((x-p1.x)*dx+(y-p1.y)*dy)/len2));
+      const px = p1.x+t*dx, py = p1.y+t*dy;
+      const dist = Math.sqrt((x-px)*(x-px)+(y-py)*(y-py));
+      if(dist < THRESH) return {a:n, b:m, w};
+    }
+  }
+  return null;
+}
+
+function setupCanvasInteraction() {
+  const canvas = document.getElementById('netCanvas');
+
+  // ── Mouse ──
+  // Store original distances to neighbours when drag starts
+  let dragStartDists = {};
+
+  function getNeighbourDists(nodeName) {
+    const p = canvasPositions[nodeName];
+    const dists = {};
+    (graph[nodeName]||[]).forEach(({node:nb}) => {
+      const q = canvasPositions[nb];
+      if(!q) return;
+      const dx = p.x - q.x, dy = p.y - q.y;
+      dists[nb] = Math.sqrt(dx*dx + dy*dy);
+    });
+    return dists;
+  }
+
+  function updateWeightsAfterDrag(nodeName) {
+    const newDists = getNeighbourDists(nodeName);
+    let changed = false;
+    (graph[nodeName]||[]).forEach(edge => {
+      const nb = edge.node;
+      const oldD = dragStartDists[nb];
+      const newD = newDists[nb];
+      if(oldD === undefined || oldD === 0) return;
+      const ratio = newD / oldD;
+      let newW = edge.w;
+      if(ratio > 1.08) {
+        const bump = Math.max(1, Math.round((ratio - 1) * edge.w * (0.8 + Math.random() * 0.6)));
+        newW = Math.min(99, edge.w + bump);
+      } else if(ratio < 0.92) {
+        const drop = Math.max(1, Math.round((1 - ratio) * edge.w * (0.8 + Math.random() * 0.6)));
+        newW = Math.max(1, edge.w - drop);
+      }
+      if(newW !== edge.w) {
+        graph[nodeName] = graph[nodeName].map(e2 => e2.node===nb ? {...e2, w:newW} : e2);
+        graph[nb] = (graph[nb]||[]).map(e2 => e2.node===nodeName ? {...e2, w:newW} : e2);
+        log(`🔀 Drag: ${nodeName}↔${nb} weight ${edge.w} → ${newW} (${ratio>1?'stretched':'shrunk'})`, ratio>1?'warn':'info');
+        changed = true;
+      }
+    });
+    if(changed) { syncEdgeInput(); drawGraph(shortestPath); }
+  }
+
+  // Track whether mouse moved enough to count as a drag vs a click
+  let mouseDidMove = false;
+  let pendingDragNode = null;
+  let pendingDragX = 0, pendingDragY = 0;
+
+  canvas.addEventListener('mousedown', e => {
+    const {x, y} = getCanvasXY(canvas, e);
+    const hit = hitNode(x, y);
+    if(hit) {
+      // Don't set dragNode yet — wait to see if mouse moves
+      pendingDragNode = hit;
+      pendingDragX = x;
+      pendingDragY = y;
+      dragOffsetX = x - canvasPositions[hit].x;
+      dragOffsetY = y - canvasPositions[hit].y;
+      dragStartDists = getNeighbourDists(hit);
+      mouseDidMove = false;
+      // Do NOT preventDefault here — we need click events to fire for node connection
+    }
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    const {x, y} = getCanvasXY(canvas, e);
+    if(pendingDragNode && !dragNode) {
+      const dx = x - pendingDragX, dy = y - pendingDragY;
+      // Only start drag if moved more than 5px
+      if(Math.sqrt(dx*dx + dy*dy) > 5) {
+        dragNode = pendingDragNode;
+        mouseDidMove = true;
+        canvas.classList.add('dragging');
+      }
+    }
+    if(dragNode) {
+      const W = canvas.width, H = canvas.height;
+      canvasPositions[dragNode].x = Math.max(32, Math.min(W-32, x - dragOffsetX));
+      canvasPositions[dragNode].y = Math.max(32, Math.min(H-32, y - dragOffsetY));
+      drawGraph(shortestPath);
+    } else {
+      const onNode = hitNode(x, y);
+      const onEdge = !onNode && hitEdge(x, y);
+      canvas.style.cursor = onNode ? 'grab' : onEdge ? 'pointer' : 'default';
+    }
+  });
+
+  canvas.addEventListener('mouseup', e => {
+    if(dragNode) {
+      updateWeightsAfterDrag(dragNode);
+      dragNode = null;
+      canvas.classList.remove('dragging');
+      canvas.style.cursor = 'grab';
+    }
+    pendingDragNode = null;
+    dragStartDists = {};
+    mouseDidMove = false;
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    if(dragNode) {
+      updateWeightsAfterDrag(dragNode);
+      dragNode = null;
+      canvas.classList.remove('dragging');
+    }
+    pendingDragNode = null;
+    dragStartDists = {};
+    mouseDidMove = false;
+  });
+
+  // ── Two-click node connection ──
+  let connectingFrom = null;
+  window._connectingFrom = () => connectingFrom;
+
+  // ── Inline edge-weight popup ──
+  const ewPopup   = document.getElementById('edgeWeightPopup');
+  const ewTitle   = document.getElementById('edgeWeightPopupTitle');
+  const ewInput   = document.getElementById('edgeWeightInput');
+  const ewConfirm = document.getElementById('edgeWeightConfirm');
+  const ewCancel  = document.getElementById('edgeWeightCancel');
+  const ewRemove  = document.getElementById('edgeWeightRemove');
+  let ewCallback       = null; // fn(weight) called on confirm
+  let ewRemoveCallback = null; // fn() called on remove
+
+  function showEdgePopup(nodeA, nodeB, existingW, isEdit, onConfirm, onRemove) {
+    const canvasRect = canvas.getBoundingClientRect();
+    const pA = canvasPositions[nodeA], pB = canvasPositions[nodeB];
+    const scaleX = canvas.width  / canvasRect.width;
+    const scaleY = canvas.height / canvasRect.height;
+    const mx = ((pA.x + pB.x) / 2) / scaleX;
+    const my = ((pA.y + pB.y) / 2) / scaleY;
+
+    ewTitle.innerHTML = isEdit
+      ? `✏️ Edit: <b>${nodeA} ↔ ${nodeB}</b>`
+      : `🔗 Connect <b>${nodeA} ↔ ${nodeB}</b>`;
+    ewInput.value = existingW ?? 1;
+    ewConfirm.textContent = isEdit ? 'Update' : 'Connect';
+
+    // Show remove button only when editing an existing edge
+    if(isEdit && onRemove) {
+      ewRemove.style.display = 'block';
+      ewRemoveCallback = onRemove;
+    } else {
+      ewRemove.style.display = 'none';
+      ewRemoveCallback = null;
+    }
+
+    ewPopup.style.left = mx + 'px';
+    ewPopup.style.top  = my + 'px';
+    ewPopup.style.display = 'block';
+    setTimeout(() => ewInput.focus(), 30);
+    ewCallback = onConfirm;
+  }
+
+  function hideEdgePopup() {
+    ewPopup.style.display = 'none';
+    ewCallback = null;
+    ewRemoveCallback = null;
+  }
+
+  ewConfirm.addEventListener('click', () => {
+    const w = parseInt(ewInput.value);
+    if(isNaN(w) || w < 1) { ewInput.style.border='2px solid red'; return; }
+    ewInput.style.border='1.5px solid #f97316';
+    if(ewCallback) ewCallback(w);
+    hideEdgePopup();
+  });
+
+  ewRemove.addEventListener('click', () => {
+    if(ewRemoveCallback) ewRemoveCallback();
+    hideEdgePopup();
+  });
+
+  ewCancel.addEventListener('click', () => {
+    hideEdgePopup();
+    connectingFrom = null;
+    drawGraph(shortestPath);
+  });
+
+  ewInput.addEventListener('keydown', ev => {
+    if(ev.key === 'Enter') ewConfirm.click();
+    if(ev.key === 'Escape') ewCancel.click();
+  });
+
+  canvas.addEventListener('click', e => {
+    if(dragNode || mouseDidMove) return;
+    const {x, y} = getCanvasXY(canvas, e);
+    const clickedNode = hitNode(x, y);
+
+    if(clickedNode) {
+      if(!connectingFrom) {
+        connectingFrom = clickedNode;
+        drawGraph(shortestPath);
+        log(`🟠 Selected <b>${clickedNode}</b> — click another node to connect`, 'info');
+      } else if(connectingFrom === clickedNode) {
+        connectingFrom = null;
+        drawGraph(shortestPath);
+        log('Selection cleared.', 'info');
+      } else {
+        const a = connectingFrom, b = clickedNode;
+        connectingFrom = null;
+        drawGraph(shortestPath);
+        const alreadyConnected = (graph[a]||[]).some(e2 => e2.node === b);
+        if(alreadyConnected) {
+          const curEdge = (graph[a]||[]).find(e2 => e2.node === b);
+          showEdgePopup(a, b, curEdge.w, true, w => {
+            graph[a] = graph[a].map(e2 => e2.node===b ? {...e2,w} : e2);
+            graph[b] = (graph[b]||[]).map(e2 => e2.node===a ? {...e2,w} : e2);
+            syncEdgeInput(); drawGraph(shortestPath);
+            log(`Edge ${a}↔${b} weight updated → ${w}`, 'success');
+          }, () => {
+            graph[a] = (graph[a]||[]).filter(e2 => e2.node !== b);
+            graph[b] = (graph[b]||[]).filter(e2 => e2.node !== a);
+            syncEdgeInput(); drawGraph(shortestPath);
+            log(`🗑 Edge ${a}↔${b} removed`, 'warn');
+          });
+        } else {
+          showEdgePopup(a, b, 1, false, w => {
+            graph[a] = [...(graph[a]||[]), {node:b, w}];
+            graph[b] = [...(graph[b]||[]), {node:a, w}];
+            syncEdgeInput(); drawGraph(shortestPath);
+            log(`✅ Connected ${a} ↔ ${b} with weight ${w}`, 'success');
+          });
+        }
+      }
+      return;
+    }
+
+    // Clicked empty canvas → cancel selection or edit edge
+    if(connectingFrom) {
+      connectingFrom = null;
+      drawGraph(shortestPath);
+      log('Selection cleared.', 'info');
+      return;
+    }
+
+    // Click on edge → show popup to edit weight
+    const edge = hitEdge(x, y);
+    if(!edge) return;
+    showEdgePopup(edge.a, edge.b, edge.w, true, w => {
+      graph[edge.a] = (graph[edge.a]||[]).map(e2 => e2.node===edge.b ? {...e2,w} : e2);
+      graph[edge.b] = (graph[edge.b]||[]).map(e2 => e2.node===edge.a ? {...e2,w} : e2);
+      syncEdgeInput(); drawGraph(shortestPath);
+      log(`Edge ${edge.a}↔${edge.b} weight updated → ${w}`, 'success');
+    }, () => {
+      graph[edge.a] = (graph[edge.a]||[]).filter(e2 => e2.node !== edge.b);
+      graph[edge.b] = (graph[edge.b]||[]).filter(e2 => e2.node !== edge.a);
+      syncEdgeInput(); drawGraph(shortestPath);
+      log(`🗑 Edge ${edge.a}↔${edge.b} removed`, 'warn');
+    });
+  });
+
+  // ── Touch ──
+  canvas.addEventListener('touchstart', e => {
+    const {x, y} = getCanvasXY(canvas, e);
+    const hit = hitNode(x, y);
+    if(hit) {
+      dragNode=hit;
+      dragOffsetX=x-canvasPositions[hit].x;
+      dragOffsetY=y-canvasPositions[hit].y;
+      dragStartDists = getNeighbourDists(hit);
+      e.preventDefault();
+    }
+  }, {passive:false});
+
+  canvas.addEventListener('touchmove', e => {
+    if(!dragNode) return;
+    e.preventDefault();
+    const {x, y} = getCanvasXY(canvas, e);
+    const W=canvas.width, H=canvas.height;
+    canvasPositions[dragNode].x = Math.max(32,Math.min(W-32, x-dragOffsetX));
+    canvasPositions[dragNode].y = Math.max(32,Math.min(H-32, y-dragOffsetY));
+    drawGraph(shortestPath);
+  }, {passive:false});
+
+  canvas.addEventListener('touchend', () => {
+    if(dragNode) {
+      updateWeightsAfterDrag(dragNode);
+      dragNode=null;
+      dragStartDists={};
+    }
+  });
+}
+
+function syncEdgeInput() {
+  const seen = new Set();
+  const parts = [];
+  nodes.forEach(n => {
+    (graph[n]||[]).forEach(({node:m,w}) => {
+      const key=[n,m].sort().join('-');
+      if(seen.has(key)) return; seen.add(key);
+      parts.push(`${n}-${m}:${w}`);
+    });
+  });
+  document.getElementById('edgeInput').value = parts.join(',');
+}
+
+// ─── IP Generation ───────────────────────────────────────────────────────────
+function genIP(index) {
+  const base = [10, 0, 0];
+  return `${base[0]}.${base[1]}.${base[2] + Math.floor(index/254)}.${(index % 254) + 1}`;
+}
+
+function assignIPs(nodeList) {
+  nodeIPs = {};
+  nodeList.forEach((n, i) => {
+    nodeIPs[n] = genIP(i + 1);
+  });
+}
+
+function renderIPTable() {
+  const tbody = document.getElementById('ipTableBody');
+  tbody.innerHTML = nodes.map(n => {
+    const isActive = locationStack.includes(n);
+    const isPath = shortestPath.includes(n);
+    return `<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:6px 10px;font-weight:600;color:${isPath?'var(--accent)':'var(--text)'};">${n}</td>
+      <td style="padding:6px 10px;color:var(--accent);">${nodeIPs[n]||'—'}</td>
+      <td style="padding:6px 10px;color:var(--text2);">255.255.255.0</td>
+      <td style="padding:6px 10px;">
+        <span style="padding:2px 8px;border-radius:10px;font-size:0.68rem;font-weight:700;
+          background:${isActive?'#dcfce7':isPath?'#dbeafe':'var(--surface2)'};
+          color:${isActive?'var(--green)':isPath?'var(--accent)':'var(--text3)'};">
+          ${isActive?'● ACTIVE':isPath?'○ ON PATH':'○ IDLE'}
+        </span>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── Logging ─────────────────────────────────────────────────────────────────
+function log(msg, type='info') {
+  const el = document.getElementById('sysLog');
+  const ts = new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const div = document.createElement('div');
+  div.className = `log-line ${type}`;
+  div.innerHTML = `<span class="ts">${ts}</span><span class="msg">${msg}</span>`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+  if(el.children.length > 60) el.removeChild(el.children[0]);
+}
+
+// ─── Auto-generate graph ─────────────────────────────────────────────────────
+function autoGenerate() {
+  const n = parseInt(document.getElementById('nodeCount').value) || 6;
+  const clamp = Math.max(2, Math.min(200, n));
+  const names = [];
+  for(let i=1;i<=clamp;i++) names.push('R'+i);
+  document.getElementById('nodeInput').value = names.join(',');
+
+  // Auto-generate random edges (connected)
+  const edges = [];
+  // Ensure connected: chain
+  for(let i=0;i<names.length-1;i++){
+    const w = Math.floor(Math.random()*9)+1;
+    edges.push(`${names[i]}-${names[i+1]}:${w}`);
+  }
+  // Add some random extra edges
+  const extra = Math.floor(clamp * 0.6);
+  for(let k=0;k<extra;k++){
+    const a = Math.floor(Math.random()*clamp);
+    let b = Math.floor(Math.random()*clamp);
+    if(a===b) b=(b+1)%clamp;
+    const already = edges.find(e=>e.startsWith(names[Math.min(a,b)]+'-'+names[Math.max(a,b)]));
+    if(!already) edges.push(`${names[a]}-${names[b]}:${Math.floor(Math.random()*9)+1}`);
+  }
+  document.getElementById('edgeInput').value = edges.join(',');
+  buildGraph();
+}
+
+// ─── Graph Builder ───────────────────────────────────────────────────────────
+function buildGraph() {
+  const rawNodes = document.getElementById('nodeInput').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const rawEdges = document.getElementById('edgeInput').value.split(',').map(s=>s.trim()).filter(Boolean);
+
+  graph = {};
+  nodes = rawNodes;
+  nodes.forEach(n => graph[n] = []);
+
+  rawEdges.forEach(e => {
+    const parts = e.split(':');
+    const pair = parts[0].split('-');
+    const a = pair[0]?.trim(), b = pair[1]?.trim();
+    const weight = parseInt(parts[1]) || 1;
+    if(a && b && graph[a] !== undefined && graph[b] !== undefined) {
+      graph[a].push({node:b, w:weight});
+      graph[b].push({node:a, w:weight});
+    }
+  });
+
+  assignIPs(nodes);
+  populateSelects();
+  computePositions();
+  shortestPath = [];
+  stopPacket();
+  drawGraph([]);
+  renderIPTable();
+  log(`Graph built: ${nodes.length} routers, ${rawEdges.length} links`, 'success');
+}
+
+function populateSelects() {
+  ['srcSelect','dstSelect','locationSelect'].forEach(id => {
+    const el = document.getElementById(id);
+    const prev = el.value;
+    el.innerHTML = nodes.map(n=>`<option value="${n}">${n} (${nodeIPs[n]||''})</option>`).join('');
+    if(nodes.includes(prev)) el.value = prev;
+  });
+}
+
+// ─── Position Assignment (weight-aware spring layout) ──────────────────────
+
+
+
+function computePositions() {
+  const canvas = document.getElementById('netCanvas');
+  const W = canvas.offsetWidth || 800, H = 420;
+  const n = nodes.length;
+  if(!n) return;
+
+  // Start with circular layout
+  const cx = W/2, cy = H/2;
+  const r = Math.min(W, H) * 0.36;
+  const pos = {};
+  nodes.forEach((nd, i) => {
+    const angle = (2*Math.PI*i/n) - Math.PI/2;
+    pos[nd] = { x: cx + r*Math.cos(angle), y: cy + r*Math.sin(angle) };
+  });
+
+  // Spring iterations (weight-based: higher weight = longer preferred distance)
+  const iterations = 80;
+  const baseLen = Math.min(W,H) * 0.18;
+  for(let iter=0; iter<iterations; iter++) {
+    const forces = {};
+    nodes.forEach(nd => forces[nd] = {x:0,y:0});
+
+    // Repulsion
+    for(let i=0;i<nodes.length;i++) {
+      for(let j=i+1;j<nodes.length;j++) {
+        const a=nodes[i], b=nodes[j];
+        const dx=pos[a].x-pos[b].x, dy=pos[a].y-pos[b].y;
+        const d=Math.max(Math.sqrt(dx*dx+dy*dy),1);
+        const f=2200/(d*d);
+        forces[a].x+=f*dx/d; forces[a].y+=f*dy/d;
+        forces[b].x-=f*dx/d; forces[b].y-=f*dy/d;
+      }
+    }
+
+    // Attraction (spring, length proportional to weight)
+    const seen = new Set();
+    nodes.forEach(nd => {
+      (graph[nd]||[]).forEach(({node:nb, w}) => {
+        const key = [nd,nb].sort().join('-');
+        if(seen.has(key)) return; seen.add(key);
+        const targetLen = baseLen + w * 18;
+        const dx=pos[nb].x-pos[nd].x, dy=pos[nb].y-pos[nd].y;
+        const d=Math.max(Math.sqrt(dx*dx+dy*dy),1);
+        const f=(d-targetLen)*0.06;
+        forces[nd].x+=f*dx/d; forces[nd].y+=f*dy/d;
+        forces[nb].x-=f*dx/d; forces[nb].y-=f*dy/d;
+      });
+    });
+
+    // Center pull
+    nodes.forEach(nd => {
+      forces[nd].x += (cx-pos[nd].x)*0.01;
+      forces[nd].y += (cy-pos[nd].y)*0.01;
+    });
+
+    // Apply
+    const step = 0.5 * (1 - iter/iterations);
+    nodes.forEach(nd => {
+      pos[nd].x += forces[nd].x * step;
+      pos[nd].y += forces[nd].y * step;
+      // Clamp
+      pos[nd].x = Math.max(44, Math.min(W-44, pos[nd].x));
+      pos[nd].y = Math.max(44, Math.min(H-44, pos[nd].y));
+    });
+  }
+
+  canvasPositions = pos;
+}
+
+// ─── Draw ────────────────────────────────────────────────────────────────────
+function drawGraph(highlight=[], pktPos=null, pktLabel='') {
+  const canvas = document.getElementById('netCanvas');
+  canvas.width = canvas.offsetWidth || 800;
+  canvas.height = 420;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // Grid dots background
+  ctx.save();
+  ctx.globalAlpha = 0.3;
+  for(let gx=20; gx<canvas.width; gx+=30) {
+    for(let gy=20; gy<canvas.height; gy+=30) {
+      ctx.beginPath();
+      ctx.arc(gx,gy,1.2,0,2*Math.PI);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+
+  const hlSet = new Set();
+  for(let i=0;i<highlight.length-1;i++) {
+    hlSet.add(highlight[i]+'-'+highlight[i+1]);
+    hlSet.add(highlight[i+1]+'-'+highlight[i]);
+  }
+
+  // Draw edges
+  const drawnEdges = new Set();
+  nodes.forEach(n => {
+    (graph[n]||[]).forEach(({node:m, w}) => {
+      const key = [n,m].sort().join('-');
+      if(drawnEdges.has(key)) return; drawnEdges.add(key);
+      const p1=canvasPositions[n], p2=canvasPositions[m];
+      if(!p1||!p2) return;
+      const isHL = hlSet.has(n+'-'+m) || hlSet.has(m+'-'+n);
+
+      // Shadow for highlighted
+      if(isHL) {
+        ctx.save();
+        ctx.shadowColor = '#2563eb33';
+        ctx.shadowBlur = 10;
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.strokeStyle = isHL ? '#2563eb' : '#d1dce8';
+      ctx.lineWidth = isHL ? 3 : 1.8;
+      if(!isHL) ctx.setLineDash([5,5]);
+      else ctx.setLineDash([]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      if(isHL) ctx.restore();
+
+      // Weight label
+      const mx=(p1.x+p2.x)/2, my=(p1.y+p2.y)/2;
+      ctx.save();
+      ctx.fillStyle = isHL ? '#1d4ed8' : '#7a90a8';
+      ctx.font = `bold 11px 'JetBrains Mono'`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const tw = ctx.measureText(String(w)).width;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(mx-tw/2-3, my-8, tw+6, 16);
+      ctx.fillStyle = isHL ? '#1d4ed8' : '#94a3b8';
+      ctx.fillText(w, mx, my);
+      ctx.restore();
+    });
+  });
+
+  // Draw nodes
+  nodes.forEach(n => {
+    const p = canvasPositions[n];
+    if(!p) return;
+    const isHL = highlight.includes(n);
+    const isCurrent = locationStack.length && locationStack[locationStack.length-1]===n;
+    const isStack = locationStack.includes(n);
+    const isConnecting = window._connectingFrom && window._connectingFrom() === n;
+    const R = 26;
+
+    // Shadow
+    ctx.save();
+    ctx.shadowColor = isConnecting ? '#f9731688' : isHL ? '#2563eb44' : isCurrent ? '#16a34a33' : '#00000011';
+    ctx.shadowBlur = isConnecting ? 22 : isHL||isCurrent ? 16 : 8;
+
+    // Circle
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, R, 0, 2*Math.PI);
+    ctx.fillStyle = isConnecting ? '#fff7ed' : isCurrent ? '#dcfce7' : isHL ? '#dbeafe' : '#ffffff';
+    ctx.fill();
+    ctx.strokeStyle = isConnecting ? '#f97316' : isCurrent ? '#16a34a' : isHL ? '#2563eb' : '#94a3b8';
+    ctx.lineWidth = isConnecting ? 3 : isCurrent||isHL ? 2.5 : 1.5;
+    ctx.stroke();
+
+    // Dashed outer ring for the node being connected
+    if(isConnecting) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, R + 7, 0, 2*Math.PI);
+      ctx.strokeStyle = '#f9731655';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    ctx.restore();
+
+    // Node name
+    ctx.fillStyle = isConnecting ? '#c2410c' : isCurrent ? '#15803d' : isHL ? '#1d4ed8' : '#1a2535';
+    ctx.font = `bold 11px 'JetBrains Mono'`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n, p.x, p.y - 5);
+
+    // IP address below name
+    ctx.fillStyle = isConnecting ? '#ea580c' : isCurrent ? '#15803d' : isHL ? '#3b82f6' : '#94a3b8';
+    ctx.font = `9px 'JetBrains Mono'`;
+    ctx.fillText(nodeIPs[n]||'', p.x, p.y + 8);
+
+    // Stack indicator
+    if(isStack && !isCurrent) {
+      ctx.beginPath();
+      ctx.arc(p.x+R-4, p.y-R+4, 5, 0, 2*Math.PI);
+      ctx.fillStyle = '#16a34a';
+      ctx.fill();
+    }
+  });
+
+  // Draw packet
+  if(pktPos) {
+    ctx.save();
+    const r = 10;
+    ctx.shadowColor = '#f59e0b88';
+    ctx.shadowBlur = 18;
+    ctx.beginPath();
+    ctx.arc(pktPos.x, pktPos.y, r, 0, 2*Math.PI);
+    ctx.fillStyle = '#f59e0b';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+
+    // Packet label
+    if(pktLabel) {
+      ctx.save();
+      ctx.fillStyle = '#1a2535';
+      ctx.font = `bold 9px 'JetBrains Mono'`;
+      ctx.textAlign = 'center';
+      ctx.fillText(pktLabel, pktPos.x, pktPos.y - 18);
+      ctx.restore();
+    }
+  }
+}
+
+// ─── Packet Animation ─────────────────────────────────────────────────────────
+function stopPacket() {
+  if(animFrameId) cancelAnimationFrame(animFrameId);
+  animFrameId = null;
+  packetProgress = 0;
+  packetPathSegment = 0;
+}
+
+function animatePacket() {
+  if(!shortestPath.length) { log('Run Dijkstra first to find a path!','warn'); return; }
+  stopPacket();
+  let seg = 0;
+  let t = 0;
+  const speed = 0.016; // per frame
+
+  const src = shortestPath[0], dst = shortestPath[shortestPath.length-1];
+  const srcIP = nodeIPs[src]||src, dstIP = nodeIPs[dst]||dst;
+  log(`📦 Packet: ${srcIP} → ${dstIP} | ${shortestPath.join(' → ')}`, 'success');
+
+  function step() {
+    if(seg >= shortestPath.length-1) {
+      drawGraph(shortestPath);
+      log(`✅ Packet delivered to ${dst} (${dstIP})`, 'success');
+      return;
+    }
+    t += speed;
+    if(t >= 1) { t=0; seg++; }
+    if(seg >= shortestPath.length-1) {
+      drawGraph(shortestPath);
+      log(`✅ Packet delivered to ${dst} (${dstIP})`, 'success');
+      return;
+    }
+    const a = canvasPositions[shortestPath[seg]];
+    const b = canvasPositions[shortestPath[seg+1]];
+    if(!a||!b) return;
+    const px = a.x + (b.x-a.x)*t;
+    const py = a.y + (b.y-a.y)*t;
+    const fromIP = nodeIPs[shortestPath[seg]]||'';
+    const toIP = nodeIPs[shortestPath[seg+1]]||'';
+    const label = `PKT: ${fromIP}→${toIP}`;
+    drawGraph(shortestPath, {x:px, y:py}, label);
+    animFrameId = requestAnimationFrame(step);
+  }
+
+  animFrameId = requestAnimationFrame(step);
+}
+
+// ─── Location Stack ───────────────────────────────────────────────────────────
+function pushLocation() {
+  const r = document.getElementById('locationSelect').value;
+  if(!r) return;
+  locationStack.push(r);
+  renderStack();
+  drawGraph(shortestPath);
+  renderIPTable();
+  log(`Device connected to ${r} (${nodeIPs[r]||''})`, 'success');
+}
+
+function popLocation() {
+  if(!locationStack.length) { log('Stack is empty','warn'); return; }
+  const removed = locationStack.pop();
+  renderStack();
+  drawGraph(shortestPath);
+  renderIPTable();
+  log(`Device disconnected from ${removed}. Current: ${locationStack[locationStack.length-1]||'none'}`);
+}
+
+function renderStack() {
+  const el = document.getElementById('stackDisplay');
+  if(!locationStack.length) {
+    el.innerHTML='<div style="color:var(--text3);font-size:0.78rem;padding:4px 0;">Stack empty</div>';
+    return;
+  }
+  el.innerHTML = locationStack.map((r,i) => {
+    const isTop = i===locationStack.length-1;
+    return `<div class="stack-item ${isTop?'top':''}">
+      <span>${r} <span style="font-size:0.7rem;opacity:0.7;">${nodeIPs[r]||''}</span></span>
+      <span style="font-size:0.7rem;color:var(--text3);">${isTop?'← active':`depth ${i}`}</span>
+    </div>`;
+  }).join('');
+}
+
+// ─── Dijkstra ─────────────────────────────────────────────────────────────────
+function dijkstra(src, dst) {
+  const dist={}, prev={}, visited=new Set();
+  nodes.forEach(n => dist[n]=Infinity);
+  dist[src]=0;
+  const pq=[[0,src]];
+  while(pq.length) {
+    pq.sort((a,b)=>a[0]-b[0]);
+    const [d,u]=pq.shift();
+    if(visited.has(u)) continue;
+    visited.add(u);
+    (graph[u]||[]).forEach(({node:v,w}) => {
+      const nd=d+w;
+      if(nd<dist[v]) { dist[v]=nd; prev[v]=u; pq.push([nd,v]); }
+    });
+  }
+  const path=[]; let cur=dst;
+  while(cur) { path.unshift(cur); cur=prev[cur]; }
+  return path[0]===src ? {path, dist:dist[dst]} : {path:[], dist:Infinity};
+}
+
+function runDijkstra() {
+  const src=document.getElementById('srcSelect').value;
+  const dst=document.getElementById('dstSelect').value;
+  if(!src||!dst||!nodes.length) { log('Build graph first','warn'); return; }
+  const {path, dist} = dijkstra(src, dst);
+  shortestPath = path;
+  stopPacket();
+
+  if(!path.length) {
+    document.getElementById('pathDisplay').innerHTML='<span style="color:var(--red);">No path found.</span>';
+    log(`No path from ${src} to ${dst}`,'warn');
+    return;
+  }
+
+  const ipPath = path.map(n=>`${n}(${nodeIPs[n]||''})`).join(' → ');
+  document.getElementById('pathDisplay').innerHTML =
+    `<b>Shortest:</b> ${path.join(' → ')}<br><span style="color:var(--text3);font-size:0.75rem;">${ipPath}</span><br><span style="color:var(--accent);">Cost: ${dist} | Hops: ${path.length-1}</span>`;
+  document.getElementById('statHops').textContent = path.length-1;
+  document.getElementById('statDist').textContent = dist;
+  drawGraph(path);
+  renderIPTable();
+  log(`Dijkstra: ${src}→${dst} | Path: ${path.join('→')} | Cost: ${dist}`, 'success');
+}
+
+// ─── BFS All Paths ────────────────────────────────────────────────────────────
+function runBFS() {
+  const src=document.getElementById('srcSelect').value;
+  const dst=document.getElementById('dstSelect').value;
+  if(!src||!dst||!nodes.length) { log('Build graph first','warn'); return; }
+
+  const allPaths=[];
+  const queue=[[src,[src]]];
+  while(queue.length) {
+    const [cur,path]=queue.shift();
+    if(cur===dst) { allPaths.push([...path]); continue; }
+    if(path.length>nodes.length) continue;
+    (graph[cur]||[]).forEach(({node:next}) => {
+      if(!path.includes(next)) queue.push([next,[...path,next]]);
+    });
+  }
+
+  const top5=allPaths.slice(0,5);
+  const display=top5.map((p,i)=>`Path ${i+1}: ${p.join('→')}`).join('\n');
+  const el=document.getElementById('pathDisplay');
+  el.innerHTML = (el.innerHTML||'') + `<br><br><b>BFS (${allPaths.length} paths):</b><br><span style="font-size:0.75rem;">${display.replace(/\n/g,'<br>')}</span>`;
+  log(`BFS: ${allPaths.length} paths from ${src} to ${dst}`);
+}
+
+// ─── Huffman ─────────────────────────────────────────────────────────────────
+function buildHuffman(text) {
+  const freq={};
+  for(const c of text) freq[c]=(freq[c]||0)+1;
+  let nodes=Object.entries(freq).map(([c,f])=>({c,f,l:null,r:null}));
+  while(nodes.length>1) {
+    nodes.sort((a,b)=>a.f-b.f);
+    const l=nodes.shift(),r=nodes.shift();
+    nodes.push({c:null,f:l.f+r.f,l,r});
+  }
+  const codes={};
+  function traverse(node,code) {
+    if(!node) return;
+    if(node.c!==null) { codes[node.c]=code||'0'; return; }
+    traverse(node.l,code+'0');
+    traverse(node.r,code+'1');
+  }
+  traverse(nodes[0],'');
+  return {codes,freq};
+}
+
+function decode(codes,encoded) {
+  const rev=Object.fromEntries(Object.entries(codes).map(([c,b])=>[b,c]));
+  let cur='',out='';
+  for(const bit of encoded) { cur+=bit; if(rev[cur]) { out+=rev[cur]; cur=''; } }
+  return out;
+}
+
+function runHuffman() {
+  const text=document.getElementById('huffInput').value;
+  if(!text) return;
+  const {codes,freq}=buildHuffman(text);
+  const encoded=text.split('').map(c=>codes[c]).join('');
+  const origBits=text.length*8;
+  const compBits=encoded.length;
+  const ratio=(origBits/compBits).toFixed(2);
+  const saving=(((origBits-compBits)/origBits)*100).toFixed(1);
+
+  document.getElementById('hOrigSize').textContent=`Orig: ${origBits}b`;
+  document.getElementById('hCompSize').textContent=`Comp: ${compBits}b`;
+  document.getElementById('hRatio').textContent=`${ratio}x`;
+  document.getElementById('statRatio').textContent=ratio+'x';
+  document.getElementById('statEff').textContent=saving+'%';
+
+  const preview=encoded.substring(0,60)+(encoded.length>60?'…':'');
+  document.getElementById('huffLog').textContent=
+    `Encoded: ${preview}\n\nDecoding: ${decode(codes,encoded)===text?'✓ Lossless':'✗ Error'}`;
+  document.getElementById('huffStats').style.display='block';
+  log(`Huffman: ${origBits}b → ${compBits}b | ${ratio}x | Saved ${saving}%`,'success');
+}
+
+// ─── Init & Resize ───────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  buildGraph();
+  renderStack();
+  setupCanvasInteraction();
+  log('System ready. Drag nodes to reposition · Click edges to edit weight.','success');
+});
+
+window.addEventListener('resize', () => {
+  // Only recompute if no custom positions exist yet
+  drawGraph(shortestPath);
+});
+
+// ══════════════════════════════════════════════
+//  Message Encryption Module
+// ══════════════════════════════════════════════
+
+let currentAlgo = 'caesar';
+
+function selectAlgo(btn) {
+  document.querySelectorAll('.enc-algo-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentAlgo = btn.dataset.algo;
+  const keyRow   = document.getElementById('encKeyRow');
+  const keyLabel = document.getElementById('encKeyLabel');
+  const keyInput = document.getElementById('encKey');
+  if(currentAlgo === 'caesar') {
+    keyRow.style.display = 'block';
+    keyLabel.textContent = 'Shift Key (1–25)';
+    keyInput.value = '3';
+    keyInput.type  = 'number';
+  } else if(currentAlgo === 'vigenere') {
+    keyRow.style.display = 'block';
+    keyLabel.textContent = 'Keyword (letters only)';
+    keyInput.value = 'KEY';
+    keyInput.type  = 'text';
+  } else if(currentAlgo === 'xor') {
+    keyRow.style.display = 'block';
+    keyLabel.textContent = 'XOR Key (0–255)';
+    keyInput.value = '42';
+    keyInput.type  = 'number';
+  } else {
+    keyRow.style.display = 'none';
+  }
+  document.getElementById('encResults').style.display = 'none';
+}
+
+// Caesar cipher
+function caesarEncrypt(text, shift) {
+  shift = ((shift % 26) + 26) % 26;
+  return text.split('').map(c => {
+    if(c >= 'A' && c <= 'Z') return String.fromCharCode(((c.charCodeAt(0)-65+shift)%26)+65);
+    if(c >= 'a' && c <= 'z') return String.fromCharCode(((c.charCodeAt(0)-97+shift)%26)+97);
+    return c;
+  }).join('');
+}
+function caesarDecrypt(text, shift) { return caesarEncrypt(text, 26-shift); }
+
+// Vigenère cipher
+function vigenereEncrypt(text, key) {
+  key = key.toUpperCase().replace(/[^A-Z]/g,'') || 'A';
+  let ki = 0;
+  return text.split('').map(c => {
+    if(c >= 'A' && c <= 'Z') { const e=String.fromCharCode(((c.charCodeAt(0)-65+key.charCodeAt(ki%key.length)-65)%26)+65); ki++; return e; }
+    if(c >= 'a' && c <= 'z') { const e=String.fromCharCode(((c.charCodeAt(0)-97+key.charCodeAt(ki%key.length)-65)%26)+97); ki++; return e; }
+    return c;
+  }).join('');
+}
+function vigenereDecrypt(text, key) {
+  key = key.toUpperCase().replace(/[^A-Z]/g,'') || 'A';
+  let ki = 0;
+  return text.split('').map(c => {
+    if(c >= 'A' && c <= 'Z') { const d=String.fromCharCode(((c.charCodeAt(0)-65-(key.charCodeAt(ki%key.length)-65)+26)%26)+65); ki++; return d; }
+    if(c >= 'a' && c <= 'z') { const d=String.fromCharCode(((c.charCodeAt(0)-97-(key.charCodeAt(ki%key.length)-65)+26)%26)+97); ki++; return d; }
+    return c;
+  }).join('');
+}
+
+// XOR cipher
+function xorCipher(text, key) {
+  return text.split('').map(c => String.fromCharCode(c.charCodeAt(0) ^ key)).join('');
+}
+function xorToHex(text, key) {
+  return text.split('').map(c => (c.charCodeAt(0) ^ key).toString(16).padStart(2,'0')).join(' ');
+}
+
+// Base64
+function b64Encrypt(text) { return btoa(unescape(encodeURIComponent(text))); }
+function b64Decrypt(text) { try { return decodeURIComponent(escape(atob(text))); } catch(e){ return '(decode error)'; } }
+
+// To binary string
+function toBinary(str) {
+  return str.split('').map(c => c.charCodeAt(0).toString(2).padStart(8,'0')).join(' ');
+}
+
+function runAll() {
+  // Sync message from single input to encryptInput
+  const msg = document.getElementById('huffInput').value;
+  document.getElementById('encryptInput').value = msg;
+  // Run encryption first, then Huffman on the encrypted text
+  runEncryption(true);
+}
+
+function runEncryption(andCompress) {
+  const msg = document.getElementById('encryptInput').value;
+  if(!msg.trim()) return;
+  const keyVal = document.getElementById('encKey') ? document.getElementById('encKey').value : '';
+
+  let encrypted, decrypted, infoLines = [];
+
+  if(currentAlgo === 'caesar') {
+    const shift = Math.max(1, Math.min(25, parseInt(keyVal)||3));
+    encrypted = caesarEncrypt(msg, shift);
+    decrypted = caesarDecrypt(encrypted, shift);
+    infoLines = [
+      `Algorithm : Caesar Cipher`,
+      `Shift Key : ${shift}`,
+      `Each letter is rotated by ${shift} position(s) in the alphabet.`,
+      `A→${String.fromCharCode(65+shift)}, B→${String.fromCharCode(66+shift)}, Z→${String.fromCharCode(65+(25+shift)%26)}`,
+    ];
+  } else if(currentAlgo === 'vigenere') {
+    const key = (keyVal.replace(/[^a-zA-Z]/g,'')||'KEY').toUpperCase();
+    encrypted = vigenereEncrypt(msg, key);
+    decrypted = vigenereDecrypt(encrypted, key);
+    infoLines = [
+      `Algorithm : Vigenère Cipher`,
+      `Keyword   : "${key}"`,
+      `Each letter shifted by the corresponding keyword letter value.`,
+      `Key repeats cyclically over the message.`,
+    ];
+  } else if(currentAlgo === 'xor') {
+    const key = Math.max(0, Math.min(255, parseInt(keyVal)||42));
+    const raw = xorCipher(msg, key);
+    encrypted = xorToHex(msg, key);
+    decrypted = xorCipher(raw, key); // XOR is its own inverse
+    infoLines = [
+      `Algorithm : XOR Cipher`,
+      `Key       : ${key} (0x${key.toString(16).padStart(2,'0').toUpperCase()})`,
+      `Each byte XOR'd with key. Shown as hex pairs.`,
+      `XOR is symmetric — same op encrypts & decrypts.`,
+    ];
+  } else {
+    encrypted = b64Encrypt(msg);
+    decrypted = b64Decrypt(encrypted);
+    infoLines = [
+      `Algorithm : Base64 Encoding`,
+      `No key needed — deterministic transform.`,
+      `3 bytes → 4 ASCII chars using A-Z, a-z, 0-9, +, /`,
+      `Commonly used to safely transmit binary data.`,
+    ];
+  }
+
+  // Show results
+  document.getElementById('encOriginal').textContent   = msg;
+  document.getElementById('encEncrypted').textContent  = encrypted;
+  document.getElementById('encDecrypted').textContent  = decrypted;
+
+  // Binary representation of encrypted (first 8 chars max to avoid overflow)
+  const binaryPreview = currentAlgo === 'xor' ? '' :
+    toBinary(encrypted.slice(0, 6)) + (encrypted.length > 6 ? ' …' : '');
+  document.getElementById('encBinary').textContent = binaryPreview ? '🔢 ' + binaryPreview : '';
+
+  const match = decrypted === msg;
+  const matchEl = document.getElementById('encMatch');
+  matchEl.textContent = match ? '✅ Decryption verified — matches original!' : '⚠️ Mismatch detected!';
+  matchEl.style.color = match ? 'var(--green)' : 'var(--red)';
+
+  document.getElementById('encInfo').innerHTML = infoLines.map(l => `<div>${l}</div>`).join('');
+  document.getElementById('encResults').style.display = 'block';
+
+  // If called from runAll, run Huffman on the encrypted text
+  if(andCompress) {
+    // Temporarily override huffInput value so runHuffman picks up encrypted text
+    const huffInputEl = document.getElementById('huffInput');
+    const origVal = huffInputEl.value;
+    huffInputEl.value = encrypted;
+    runHuffman();
+    huffInputEl.value = origVal; // restore display value
+    document.getElementById('huffStats').style.display = 'block';
+  }
+}
+
+</script>
+</body>
+</html>
