@@ -256,7 +256,6 @@ canvas.dragging { cursor: grabbing; }
 }
 .pkt-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--packet-color); }
 
-/* Animated packet */
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
 .pulsing { animation: pulse 1s infinite; }
 
@@ -271,7 +270,6 @@ canvas.dragging { cursor: grabbing; }
   color: var(--accent);
 }
 
-/* ── Encryption Card ── */
 .enc-algo-btn {
   padding: 4px 12px;
   border-radius: 20px;
@@ -333,10 +331,8 @@ canvas.dragging { cursor: grabbing; }
 
 <div class="layout">
 
-  <!-- LEFT -->
   <div class="left-col">
 
-    <!-- Dynamic Graph Builder -->
     <div class="card">
       <h2><span class="dot"></span> Network Builder</h2>
 
@@ -355,7 +351,6 @@ canvas.dragging { cursor: grabbing; }
       <button class="btn" onclick="buildGraph()">⚙ Build Graph</button>
     </div>
 
-    <!-- Routing -->
     <div class="card">
       <h2><span class="dot"></span> Routing Control</h2>
       <label>Source</label>
@@ -370,7 +365,6 @@ canvas.dragging { cursor: grabbing; }
       <div class="path-display" id="pathDisplay">Run Dijkstra to find path...</div>
     </div>
 
-    <!-- Location Stack -->
     <div class="card">
       <h2><span class="dot"></span> Device Location Stack</h2>
       <label>Connect device to node</label>
@@ -382,7 +376,6 @@ canvas.dragging { cursor: grabbing; }
       <div class="stack-display" id="stackDisplay"></div>
     </div>
 
-    <!-- Unified Message Card -->
     <div class="card" id="encryptionCard">
       <h2><span class="dot" style="background:var(--purple)"></span> Data Payload</h2>
 
@@ -391,7 +384,6 @@ canvas.dragging { cursor: grabbing; }
       <!-- hidden mirror for encryption JS -->
       <textarea id="encryptInput" style="display:none;">hello network simulation world</textarea>
 
-      <!-- Encryption section -->
       <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
         <div style="font-size:0.7rem;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">🔐 Encryption</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
@@ -404,18 +396,15 @@ canvas.dragging { cursor: grabbing; }
         </div>
       </div>
 
-      <!-- Huffman section -->
       <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
         <div style="font-size:0.7rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">📦 Compression</div>
       </div>
 
-      <!-- Separate action buttons -->
       <div style="display:flex;gap:8px;margin-top:6px;">
         <button class="btn" style="flex:1;background:var(--purple);border-color:var(--purple);" onclick="runEncryption(false)">🔐 Encrypt</button>
         <button class="btn" style="flex:1;background:var(--teal);border-color:var(--teal);" onclick="runAll()">📦 Compress & Transmit</button>
       </div>
 
-      <!-- Encryption results -->
       <div id="encResults" style="display:none;margin-top:12px;">
         <div class="enc-stage" style="border-color:#c7d2fe;background:#f5f3ff;">
           <div class="enc-stage-label" style="color:var(--purple);">📝 Original Message</div>
@@ -448,10 +437,10 @@ canvas.dragging { cursor: grabbing; }
 
   </div>
 
-  <!-- RIGHT -->
+  
   <div class="right-col">
 
-    <!-- Canvas -->
+    
     <div class="card" style="padding:14px;">
       <h2><span class="dot"></span> Network Topology</h2>
       <div class="legend">
@@ -476,7 +465,7 @@ canvas.dragging { cursor: grabbing; }
       </div>
       <div style="position:relative;display:block;">
         <canvas id="netCanvas" height="420"></canvas>
-        <!-- Inline edge-weight popup -->
+        
         <div id="edgeWeightPopup" style="
           display:none;
           position:absolute;
@@ -513,7 +502,6 @@ canvas.dragging { cursor: grabbing; }
       </div>
     </div>
 
-    <!-- Stats -->
     <div class="card">
       <h2><span class="dot"></span> Transmission Stats</h2>
       <div class="stats-grid">
@@ -524,7 +512,6 @@ canvas.dragging { cursor: grabbing; }
       </div>
     </div>
 
-    <!-- IP Table -->
     <div class="card">
       <h2><span class="dot"></span> Node IP Address Table</h2>
       <div id="ipTable" style="overflow-x:auto;">
@@ -542,7 +529,7 @@ canvas.dragging { cursor: grabbing; }
       </div>
     </div>
 
-    <!-- Log -->
+   
     <div class="card">
       <h2><span class="dot"></span> System Log</h2>
       <div class="log-box" id="sysLog"></div>
@@ -552,7 +539,6 @@ canvas.dragging { cursor: grabbing; }
 </div>
 
 <script>
-// ─── State ──────────────────────────────────────────────────────────────────
 let graph = {};
 let nodes = [];
 let nodeIPs = {};
@@ -566,11 +552,7 @@ let packetProgress = 0;
 let packetPathSegment = 0;
 let animFrameId = null;
 
-// Drag state
 let dragNode = null;
-let dragOffsetX = 0, dragOffsetY = 0;
-
-// ─── Canvas helpers ──────────────────────────────────────────────────────────
 function getCanvasXY(canvas, e) {
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
@@ -592,7 +574,6 @@ function hitNode(x, y) {
 }
 
 function hitEdge(x, y) {
-  // Returns {a, b, w} if click is near an edge midpoint/line
   const THRESH = 10;
   const drawn = new Set();
   for(const n of nodes) {
@@ -601,7 +582,7 @@ function hitEdge(x, y) {
       if(drawn.has(key)) continue; drawn.add(key);
       const p1 = canvasPositions[n], p2 = canvasPositions[m];
       if(!p1||!p2) continue;
-      // Distance from point to segment
+      
       const dx = p2.x-p1.x, dy = p2.y-p1.y;
       const len2 = dx*dx+dy*dy;
       if(len2===0) continue;
@@ -617,8 +598,6 @@ function hitEdge(x, y) {
 function setupCanvasInteraction() {
   const canvas = document.getElementById('netCanvas');
 
-  // ── Mouse ──
-  // Store original distances to neighbours when drag starts
   let dragStartDists = {};
 
   function getNeighbourDists(nodeName) {
@@ -660,7 +639,6 @@ function setupCanvasInteraction() {
     if(changed) { syncEdgeInput(); drawGraph(shortestPath); }
   }
 
-  // Track whether mouse moved enough to count as a drag vs a click
   let mouseDidMove = false;
   let pendingDragNode = null;
   let pendingDragX = 0, pendingDragY = 0;
@@ -669,7 +647,7 @@ function setupCanvasInteraction() {
     const {x, y} = getCanvasXY(canvas, e);
     const hit = hitNode(x, y);
     if(hit) {
-      // Don't set dragNode yet — wait to see if mouse moves
+      
       pendingDragNode = hit;
       pendingDragX = x;
       pendingDragY = y;
@@ -677,7 +655,7 @@ function setupCanvasInteraction() {
       dragOffsetY = y - canvasPositions[hit].y;
       dragStartDists = getNeighbourDists(hit);
       mouseDidMove = false;
-      // Do NOT preventDefault here — we need click events to fire for node connection
+     
     }
   });
 
@@ -685,7 +663,7 @@ function setupCanvasInteraction() {
     const {x, y} = getCanvasXY(canvas, e);
     if(pendingDragNode && !dragNode) {
       const dx = x - pendingDragX, dy = y - pendingDragY;
-      // Only start drag if moved more than 5px
+      
       if(Math.sqrt(dx*dx + dy*dy) > 5) {
         dragNode = pendingDragNode;
         mouseDidMove = true;
@@ -726,12 +704,9 @@ function setupCanvasInteraction() {
     dragStartDists = {};
     mouseDidMove = false;
   });
-
-  // ── Two-click node connection ──
   let connectingFrom = null;
   window._connectingFrom = () => connectingFrom;
 
-  // ── Inline edge-weight popup ──
   const ewPopup   = document.getElementById('edgeWeightPopup');
   const ewTitle   = document.getElementById('edgeWeightPopupTitle');
   const ewInput   = document.getElementById('edgeWeightInput');
@@ -845,7 +820,6 @@ function setupCanvasInteraction() {
       return;
     }
 
-    // Clicked empty canvas → cancel selection or edit edge
     if(connectingFrom) {
       connectingFrom = null;
       drawGraph(shortestPath);
@@ -853,7 +827,6 @@ function setupCanvasInteraction() {
       return;
     }
 
-    // Click on edge → show popup to edit weight
     const edge = hitEdge(x, y);
     if(!edge) return;
     showEdgePopup(edge.a, edge.b, edge.w, true, w => {
@@ -869,7 +842,6 @@ function setupCanvasInteraction() {
     });
   });
 
-  // ── Touch ──
   canvas.addEventListener('touchstart', e => {
     const {x, y} = getCanvasXY(canvas, e);
     const hit = hitNode(x, y);
@@ -914,7 +886,6 @@ function syncEdgeInput() {
   document.getElementById('edgeInput').value = parts.join(',');
 }
 
-// ─── IP Generation ───────────────────────────────────────────────────────────
 function genIP(index) {
   const base = [10, 0, 0];
   return `${base[0]}.${base[1]}.${base[2] + Math.floor(index/254)}.${(index % 254) + 1}`;
@@ -946,8 +917,6 @@ function renderIPTable() {
     </tr>`;
   }).join('');
 }
-
-// ─── Logging ─────────────────────────────────────────────────────────────────
 function log(msg, type='info') {
   const el = document.getElementById('sysLog');
   const ts = new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -959,7 +928,6 @@ function log(msg, type='info') {
   if(el.children.length > 60) el.removeChild(el.children[0]);
 }
 
-// ─── Auto-generate graph ─────────────────────────────────────────────────────
 function autoGenerate() {
   const n = parseInt(document.getElementById('nodeCount').value) || 6;
   const clamp = Math.max(2, Math.min(200, n));
@@ -967,14 +935,13 @@ function autoGenerate() {
   for(let i=1;i<=clamp;i++) names.push('R'+i);
   document.getElementById('nodeInput').value = names.join(',');
 
-  // Auto-generate random edges (connected)
   const edges = [];
   // Ensure connected: chain
   for(let i=0;i<names.length-1;i++){
     const w = Math.floor(Math.random()*9)+1;
     edges.push(`${names[i]}-${names[i+1]}:${w}`);
   }
-  // Add some random extra edges
+ 
   const extra = Math.floor(clamp * 0.6);
   for(let k=0;k<extra;k++){
     const a = Math.floor(Math.random()*clamp);
@@ -987,7 +954,6 @@ function autoGenerate() {
   buildGraph();
 }
 
-// ─── Graph Builder ───────────────────────────────────────────────────────────
 function buildGraph() {
   const rawNodes = document.getElementById('nodeInput').value.split(',').map(s=>s.trim()).filter(Boolean);
   const rawEdges = document.getElementById('edgeInput').value.split(',').map(s=>s.trim()).filter(Boolean);
@@ -1026,17 +992,12 @@ function populateSelects() {
   });
 }
 
-// ─── Position Assignment (weight-aware spring layout) ──────────────────────
-
-
-
 function computePositions() {
   const canvas = document.getElementById('netCanvas');
   const W = canvas.offsetWidth || 800, H = 420;
   const n = nodes.length;
   if(!n) return;
 
-  // Start with circular layout
   const cx = W/2, cy = H/2;
   const r = Math.min(W, H) * 0.36;
   const pos = {};
@@ -1045,14 +1006,12 @@ function computePositions() {
     pos[nd] = { x: cx + r*Math.cos(angle), y: cy + r*Math.sin(angle) };
   });
 
-  // Spring iterations (weight-based: higher weight = longer preferred distance)
   const iterations = 80;
   const baseLen = Math.min(W,H) * 0.18;
   for(let iter=0; iter<iterations; iter++) {
     const forces = {};
     nodes.forEach(nd => forces[nd] = {x:0,y:0});
 
-    // Repulsion
     for(let i=0;i<nodes.length;i++) {
       for(let j=i+1;j<nodes.length;j++) {
         const a=nodes[i], b=nodes[j];
@@ -1064,7 +1023,6 @@ function computePositions() {
       }
     }
 
-    // Attraction (spring, length proportional to weight)
     const seen = new Set();
     nodes.forEach(nd => {
       (graph[nd]||[]).forEach(({node:nb, w}) => {
@@ -1079,18 +1037,16 @@ function computePositions() {
       });
     });
 
-    // Center pull
     nodes.forEach(nd => {
       forces[nd].x += (cx-pos[nd].x)*0.01;
       forces[nd].y += (cy-pos[nd].y)*0.01;
     });
 
-    // Apply
     const step = 0.5 * (1 - iter/iterations);
     nodes.forEach(nd => {
       pos[nd].x += forces[nd].x * step;
       pos[nd].y += forces[nd].y * step;
-      // Clamp
+   
       pos[nd].x = Math.max(44, Math.min(W-44, pos[nd].x));
       pos[nd].y = Math.max(44, Math.min(H-44, pos[nd].y));
     });
@@ -1099,7 +1055,6 @@ function computePositions() {
   canvasPositions = pos;
 }
 
-// ─── Draw ────────────────────────────────────────────────────────────────────
 function drawGraph(highlight=[], pktPos=null, pktLabel='') {
   const canvas = document.getElementById('netCanvas');
   canvas.width = canvas.offsetWidth || 800;
@@ -1107,7 +1062,6 @@ function drawGraph(highlight=[], pktPos=null, pktLabel='') {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // Grid dots background
   ctx.save();
   ctx.globalAlpha = 0.3;
   for(let gx=20; gx<canvas.width; gx+=30) {
@@ -1126,7 +1080,6 @@ function drawGraph(highlight=[], pktPos=null, pktLabel='') {
     hlSet.add(highlight[i+1]+'-'+highlight[i]);
   }
 
-  // Draw edges
   const drawnEdges = new Set();
   nodes.forEach(n => {
     (graph[n]||[]).forEach(({node:m, w}) => {
@@ -1136,7 +1089,6 @@ function drawGraph(highlight=[], pktPos=null, pktLabel='') {
       if(!p1||!p2) return;
       const isHL = hlSet.has(n+'-'+m) || hlSet.has(m+'-'+n);
 
-      // Shadow for highlighted
       if(isHL) {
         ctx.save();
         ctx.shadowColor = '#2563eb33';
@@ -1154,7 +1106,6 @@ function drawGraph(highlight=[], pktPos=null, pktLabel='') {
       ctx.setLineDash([]);
       if(isHL) ctx.restore();
 
-      // Weight label
       const mx=(p1.x+p2.x)/2, my=(p1.y+p2.y)/2;
       ctx.save();
       ctx.fillStyle = isHL ? '#1d4ed8' : '#7a90a8';
@@ -1170,7 +1121,6 @@ function drawGraph(highlight=[], pktPos=null, pktLabel='') {
     });
   });
 
-  // Draw nodes
   nodes.forEach(n => {
     const p = canvasPositions[n];
     if(!p) return;
@@ -1180,12 +1130,10 @@ function drawGraph(highlight=[], pktPos=null, pktLabel='') {
     const isConnecting = window._connectingFrom && window._connectingFrom() === n;
     const R = 26;
 
-    // Shadow
     ctx.save();
     ctx.shadowColor = isConnecting ? '#f9731688' : isHL ? '#2563eb44' : isCurrent ? '#16a34a33' : '#00000011';
     ctx.shadowBlur = isConnecting ? 22 : isHL||isCurrent ? 16 : 8;
 
-    // Circle
     ctx.beginPath();
     ctx.arc(p.x, p.y, R, 0, 2*Math.PI);
     ctx.fillStyle = isConnecting ? '#fff7ed' : isCurrent ? '#dcfce7' : isHL ? '#dbeafe' : '#ffffff';
@@ -1193,8 +1141,6 @@ function drawGraph(highlight=[], pktPos=null, pktLabel='') {
     ctx.strokeStyle = isConnecting ? '#f97316' : isCurrent ? '#16a34a' : isHL ? '#2563eb' : '#94a3b8';
     ctx.lineWidth = isConnecting ? 3 : isCurrent||isHL ? 2.5 : 1.5;
     ctx.stroke();
-
-    // Dashed outer ring for the node being connected
     if(isConnecting) {
       ctx.beginPath();
       ctx.arc(p.x, p.y, R + 7, 0, 2*Math.PI);
@@ -1207,19 +1153,16 @@ function drawGraph(highlight=[], pktPos=null, pktLabel='') {
 
     ctx.restore();
 
-    // Node name
     ctx.fillStyle = isConnecting ? '#c2410c' : isCurrent ? '#15803d' : isHL ? '#1d4ed8' : '#1a2535';
     ctx.font = `bold 11px 'JetBrains Mono'`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(n, p.x, p.y - 5);
 
-    // IP address below name
     ctx.fillStyle = isConnecting ? '#ea580c' : isCurrent ? '#15803d' : isHL ? '#3b82f6' : '#94a3b8';
     ctx.font = `9px 'JetBrains Mono'`;
     ctx.fillText(nodeIPs[n]||'', p.x, p.y + 8);
 
-    // Stack indicator
     if(isStack && !isCurrent) {
       ctx.beginPath();
       ctx.arc(p.x+R-4, p.y-R+4, 5, 0, 2*Math.PI);
@@ -1227,8 +1170,6 @@ function drawGraph(highlight=[], pktPos=null, pktLabel='') {
       ctx.fill();
     }
   });
-
-  // Draw packet
   if(pktPos) {
     ctx.save();
     const r = 10;
@@ -1243,7 +1184,6 @@ function drawGraph(highlight=[], pktPos=null, pktLabel='') {
     ctx.stroke();
     ctx.restore();
 
-    // Packet label
     if(pktLabel) {
       ctx.save();
       ctx.fillStyle = '#1a2535';
@@ -1254,8 +1194,6 @@ function drawGraph(highlight=[], pktPos=null, pktLabel='') {
     }
   }
 }
-
-// ─── Packet Animation ─────────────────────────────────────────────────────────
 function stopPacket() {
   if(animFrameId) cancelAnimationFrame(animFrameId);
   animFrameId = null;
@@ -1302,7 +1240,6 @@ function animatePacket() {
   animFrameId = requestAnimationFrame(step);
 }
 
-// ─── Location Stack ───────────────────────────────────────────────────────────
 function pushLocation() {
   const r = document.getElementById('locationSelect').value;
   if(!r) return;
@@ -1337,7 +1274,6 @@ function renderStack() {
   }).join('');
 }
 
-// ─── Dijkstra ─────────────────────────────────────────────────────────────────
 function dijkstra(src, dst) {
   const dist={}, prev={}, visited=new Set();
   nodes.forEach(n => dist[n]=Infinity);
@@ -1382,7 +1318,6 @@ function runDijkstra() {
   log(`Dijkstra: ${src}→${dst} | Path: ${path.join('→')} | Cost: ${dist}`, 'success');
 }
 
-// ─── BFS All Paths ────────────────────────────────────────────────────────────
 function runBFS() {
   const src=document.getElementById('srcSelect').value;
   const dst=document.getElementById('dstSelect').value;
@@ -1406,7 +1341,6 @@ function runBFS() {
   log(`BFS: ${allPaths.length} paths from ${src} to ${dst}`);
 }
 
-// ─── Huffman ─────────────────────────────────────────────────────────────────
 function buildHuffman(text) {
   const freq={};
   for(const c of text) freq[c]=(freq[c]||0)+1;
@@ -1457,7 +1391,6 @@ function runHuffman() {
   log(`Huffman: ${origBits}b → ${compBits}b | ${ratio}x | Saved ${saving}%`,'success');
 }
 
-// ─── Init & Resize ───────────────────────────────────────────────────────────
 window.addEventListener('load', () => {
   buildGraph();
   renderStack();
@@ -1470,9 +1403,6 @@ window.addEventListener('resize', () => {
   drawGraph(shortestPath);
 });
 
-// ══════════════════════════════════════════════
-//  Message Encryption Module
-// ══════════════════════════════════════════════
 
 let currentAlgo = 'caesar';
 
@@ -1504,7 +1434,7 @@ function selectAlgo(btn) {
   document.getElementById('encResults').style.display = 'none';
 }
 
-// Caesar cipher
+
 function caesarEncrypt(text, shift) {
   shift = ((shift % 26) + 26) % 26;
   return text.split('').map(c => {
@@ -1515,7 +1445,7 @@ function caesarEncrypt(text, shift) {
 }
 function caesarDecrypt(text, shift) { return caesarEncrypt(text, 26-shift); }
 
-// Vigenère cipher
+
 function vigenereEncrypt(text, key) {
   key = key.toUpperCase().replace(/[^A-Z]/g,'') || 'A';
   let ki = 0;
@@ -1535,7 +1465,6 @@ function vigenereDecrypt(text, key) {
   }).join('');
 }
 
-// XOR cipher
 function xorCipher(text, key) {
   return text.split('').map(c => String.fromCharCode(c.charCodeAt(0) ^ key)).join('');
 }
@@ -1543,20 +1472,20 @@ function xorToHex(text, key) {
   return text.split('').map(c => (c.charCodeAt(0) ^ key).toString(16).padStart(2,'0')).join(' ');
 }
 
-// Base64
+
 function b64Encrypt(text) { return btoa(unescape(encodeURIComponent(text))); }
 function b64Decrypt(text) { try { return decodeURIComponent(escape(atob(text))); } catch(e){ return '(decode error)'; } }
 
-// To binary string
+
 function toBinary(str) {
   return str.split('').map(c => c.charCodeAt(0).toString(2).padStart(8,'0')).join(' ');
 }
 
 function runAll() {
-  // Sync message from single input to encryptInput
+  
   const msg = document.getElementById('huffInput').value;
   document.getElementById('encryptInput').value = msg;
-  // Run encryption first, then Huffman on the encrypted text
+  
   runEncryption(true);
 }
 
@@ -1609,12 +1538,12 @@ function runEncryption(andCompress) {
     ];
   }
 
-  // Show results
+ 
   document.getElementById('encOriginal').textContent   = msg;
   document.getElementById('encEncrypted').textContent  = encrypted;
   document.getElementById('encDecrypted').textContent  = decrypted;
 
-  // Binary representation of encrypted (first 8 chars max to avoid overflow)
+  
   const binaryPreview = currentAlgo === 'xor' ? '' :
     toBinary(encrypted.slice(0, 6)) + (encrypted.length > 6 ? ' …' : '');
   document.getElementById('encBinary').textContent = binaryPreview ? '🔢 ' + binaryPreview : '';
@@ -1627,7 +1556,7 @@ function runEncryption(andCompress) {
   document.getElementById('encInfo').innerHTML = infoLines.map(l => `<div>${l}</div>`).join('');
   document.getElementById('encResults').style.display = 'block';
 
-  // If called from runAll, run Huffman on the encrypted text
+ 
   if(andCompress) {
     // Temporarily override huffInput value so runHuffman picks up encrypted text
     const huffInputEl = document.getElementById('huffInput');
