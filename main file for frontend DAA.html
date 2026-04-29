@@ -546,7 +546,7 @@ let locationStack = [];
 let shortestPath = [];
 let canvasPositions = {};
 
-// Packet animation state
+
 let packetAnim = null;
 let packetProgress = 0;
 let packetPathSegment = 0;
@@ -730,7 +730,7 @@ function setupCanvasInteraction() {
     ewInput.value = existingW ?? 1;
     ewConfirm.textContent = isEdit ? 'Update' : 'Connect';
 
-    // Show remove button only when editing an existing edge
+   
     if(isEdit && onRemove) {
       ewRemove.style.display = 'block';
       ewRemoveCallback = onRemove;
@@ -1399,7 +1399,7 @@ window.addEventListener('load', () => {
 });
 
 window.addEventListener('resize', () => {
-  // Only recompute if no custom positions exist yet
+ 
   drawGraph(shortestPath);
 });
 
@@ -1558,12 +1558,12 @@ function runEncryption(andCompress) {
 
  
   if(andCompress) {
-    // Temporarily override huffInput value so runHuffman picks up encrypted text
+   
     const huffInputEl = document.getElementById('huffInput');
     const origVal = huffInputEl.value;
     huffInputEl.value = encrypted;
     runHuffman();
-    huffInputEl.value = origVal; // restore display value
+    huffInputEl.value = origVal; 
     document.getElementById('huffStats').style.display = 'block';
   }
 }
